@@ -37,4 +37,6 @@ curl 'localhost:9200/_mapping?pretty=true'
 
 ## Elasticsearch使用
 
+## 项目
 
+- [ElasticSearch搜房网实战](https://github.com/kangapp/Elasticsearch/tree/master/project)
