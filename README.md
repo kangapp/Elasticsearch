@@ -177,7 +177,79 @@ yellow open customer   99Yq4u7TSbW_izQIbyRSpg 5 1 1 0  4.4kb  4.4kb
   }
 }
 ```
-- 批量创建文档
+- 批量查询
+
+> `GET _mget`  
+```
+{
+  "docs":[
+    {
+      "_index":"test_index",
+      "_type":"doc",
+      "_id":1
+    },
+    {
+      "_index":"test_index",
+      "_type":"doc",
+      "_id":3
+    }
+    ]
+}
+```
+> 同一个index  
+> `GET test_index/_mget`
+```
+{
+  "docs":[
+    {
+      "_type":"doc",
+      "_id":1
+    },
+    {
+      "_type":"doc",
+      "_id":3
+    }
+    ]
+}
+```
+> 同index同type  
+> `GET test_index/doc/_mget`
+```
+{
+  "ids":[1,3]
+}
+```
+---
+```
+{
+  "docs": [
+    {
+      "_index": "test_index",
+      "_type": "doc",
+      "_id": "1",
+      "_version": 13,
+      "found": true,
+      "_source": {
+        "username": "liufukang",
+        "age": 24
+      }
+    },
+    {
+      "_index": "test_index",
+      "_type": "doc",
+      "_id": "3",
+      "_version": 4,
+      "found": true,
+      "_source": {
+        "username": "jack",
+        "age": 19
+      }
+    }
+  ]
+}
+```
+- 批量写入文档  
+[_bulk](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html)
 
 ## 项目
 
