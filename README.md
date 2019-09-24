@@ -64,6 +64,7 @@ curl 'localhost:9200/_mapping?pretty=true'
 > 1、Curl命令行  
 > 2、Kibana DevTools
 #### 索引API
+---
 - 创建索引
 > `PUT /test_index`
 ```
@@ -80,6 +81,7 @@ yellow open .kibana    fD0tR-G-TJCuSba2G3bxnQ 1 1 3 2 11.1kb 11.1kb
 yellow open test_index YPv3LtrMQvStMLNEMblWaQ 5 1 0 0  1.1kb  1.1kb
 yellow open customer   99Yq4u7TSbW_izQIbyRSpg 5 1 1 0  4.4kb  4.4kb
 ```
+---
 - 删除索引
 > `DELETE /test_index`
 ```
@@ -89,6 +91,7 @@ yellow open customer   99Yq4u7TSbW_izQIbyRSpg 5 1 1 0  4.4kb  4.4kb
 ```
 
 #### 文档API
+---
 - 指定ID创建文档
 > 如果索引不存在，es会自动创建对应的index和type  
 > `PUT /test_index/doc/1
@@ -112,6 +115,7 @@ yellow open customer   99Yq4u7TSbW_izQIbyRSpg 5 1 1 0  4.4kb  4.4kb
   "_primary_term": 1
 }
 ```
+---
 - 不指定ID创建文档
 > `POST /test_index/doc
 {
@@ -134,6 +138,7 @@ yellow open customer   99Yq4u7TSbW_izQIbyRSpg 5 1 1 0  4.4kb  4.4kb
   "_primary_term": 1
 }
 ```
+---
 - 查询指定ID文档
 > `GET /test_index/doc/1`
 ```
@@ -149,6 +154,7 @@ yellow open customer   99Yq4u7TSbW_izQIbyRSpg 5 1 1 0  4.4kb  4.4kb
   }
 }
 ```
+---
 - 查询所有的文档
 > `GET /test_index/doc/_search`
 
@@ -197,6 +203,7 @@ yellow open customer   99Yq4u7TSbW_izQIbyRSpg 5 1 1 0  4.4kb  4.4kb
   }
 }
 ```
+---
 - 批量查询
 
 > `GET _mget`  
@@ -268,6 +275,7 @@ yellow open customer   99Yq4u7TSbW_izQIbyRSpg 5 1 1 0  4.4kb  4.4kb
   ]
 }
 ```
+---
 - 批量写入文档  
 [_bulk](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html)
 
