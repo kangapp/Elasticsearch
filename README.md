@@ -14,8 +14,8 @@
     * [<a href="https://www.elastic.co/cn/downloads/kibana" rel="nofollow">下载并安装Kibana</a>](#下载并安装kibana)
 * [Elasticsearch使用](#elasticsearch使用)
     * [Rest API](#rest-api)
-    * [索引API](#索引api)
-    * [文档API](#文档api)
+        * [索引API](#索引api)
+        * [文档API](#文档api)
 * [项目](#项目)
 
 
