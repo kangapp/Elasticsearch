@@ -91,6 +91,7 @@ yellow open customer   99Yq4u7TSbW_izQIbyRSpg 5 1 1 0  4.4kb  4.4kb
 ```
 
 #### 文档API
+> POST不用加具体的id，它是作用在一个集合资源之上的（/uri），而PUT操作是作用在一个具体资源之上的（/uri/xxx）
 ---
 - 指定ID创建文档
 > 如果索引不存在，es会自动创建对应的index和type  
