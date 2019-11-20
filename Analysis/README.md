@@ -20,7 +20,7 @@
 ## 分词器（Analyzer）
 
 ### Character Filters
-> 针对原始文本进行处理，可以对文本进行字符的添加、修改和删除。  
+> 针对原始文本进行处理，可以对文本进行字符的添加、修改和删除，会改变位置和偏移量。  
 >每一个分词器可以没有或有多个Character Filters
 
 ### Tokenizer
@@ -100,7 +100,6 @@ POST _analyze
 
 
 ## 自定义分词器
-> 好像只能在索引中才能使用分词器的参数
 ### [Character Filters](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-charfilters.html)
 
 ```
@@ -111,7 +110,6 @@ POST _analyze
   "text": "<p>I&apos;m so <b>happy</b>!</p>"
 }
 ```
----
 ```
 {
   "tokens": [
@@ -129,7 +127,209 @@ I'm so happy!
   ]
 }
 ```
+---
+```
+POST _analyze
+{
+  "tokenizer":  "keyword", 
+  "char_filter":  [
+    {
+      "type":"mapping",
+      "mappings":[
+          "1 => one",
+          "2 => two",
+          "3 => three",
+          "4 => four",
+          "5 => five",
+          "6 => six",
+          "7 => seven",
+          "8 => eight",
+          "9 => nine"
+        ]
+    }
+  ],
+  "text": "1 2 3 4 5 6 7 8 9"
+}
+```
+```
+{
+  "tokens": [
+    {
+      "token": "one two three four five six seven eight nine",
+      "start_offset": 0,
+      "end_offset": 17,
+      "type": "word",
+      "position": 0
+    }
+  ]
+}
+```
 
-### Tokenizers
+### [Tokenizers](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-tokenizers.html)
+```
+POST _analyze
+{
+  "tokenizer": "path_hierarchy",
+  "text": "one/two/three"
+}
+```
+---
+```
+{
+  "tokens": [
+    {
+      "token": "one",
+      "start_offset": 0,
+      "end_offset": 3,
+      "type": "word",
+      "position": 0
+    },
+    {
+      "token": "one/two",
+      "start_offset": 0,
+      "end_offset": 7,
+      "type": "word",
+      "position": 0
+    },
+    {
+      "token": "one/two/three",
+      "start_offset": 0,
+      "end_offset": 13,
+      "type": "word",
+      "position": 0
+    }
+  ]
+}
+```
 
-### Token Filters
+### [Token Filters](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-tokenfilters.html)
+```
+POST _analyze
+{
+  "text": "a Hello the World",
+  "tokenizer": "standard",
+  "filter": [
+      "lowercase",
+      "stop",
+      {
+        "type": "ngram",
+        "min_gram": 2,
+        "max_gram": 4
+      }
+    ]
+}
+```
+---
+```
+{
+  "tokens": [
+    {
+      "token": "hel",
+      "start_offset": 2,
+      "end_offset": 7,
+      "type": "<ALPHANUM>",
+      "position": 1
+    },
+    {
+      "token": "hell",
+      "start_offset": 2,
+      "end_offset": 7,
+      "type": "<ALPHANUM>",
+      "position": 1
+    },
+    {
+      "token": "ell",
+      "start_offset": 2,
+      "end_offset": 7,
+      "type": "<ALPHANUM>",
+      "position": 1
+    },
+    {
+      "token": "ello",
+      "start_offset": 2,
+      "end_offset": 7,
+      "type": "<ALPHANUM>",
+      "position": 1
+    },
+    {
+      "token": "llo",
+      "start_offset": 2,
+      "end_offset": 7,
+      "type": "<ALPHANUM>",
+      "position": 1
+    },
+    {
+      "token": "wor",
+      "start_offset": 12,
+      "end_offset": 17,
+      "type": "<ALPHANUM>",
+      "position": 3
+    },
+    {
+      "token": "worl",
+      "start_offset": 12,
+      "end_offset": 17,
+      "type": "<ALPHANUM>",
+      "position": 3
+    },
+    {
+      "token": "orl",
+      "start_offset": 12,
+      "end_offset": 17,
+      "type": "<ALPHANUM>",
+      "position": 3
+    },
+    {
+      "token": "orld",
+      "start_offset": 12,
+      "end_offset": 17,
+      "type": "<ALPHANUM>",
+      "position": 3
+    },
+    {
+      "token": "rld",
+      "start_offset": 12,
+      "end_offset": 17,
+      "type": "<ALPHANUM>",
+      "position": 3
+    }
+  ]
+}
+```
+### [自定义分词(Custom Analyzer)](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-custom-analyzer.html#analysis-custom-analyzer)
+```
+PUT my_index
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "my_custom_analyzer": {
+          "type": "custom", 
+          "tokenizer": "standard",
+          "char_filter": [
+            "html_strip"
+          ],
+          "filter": [
+            "lowercase",
+            "asciifolding"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+```
+POST my_index/_analyze
+{
+  "analyzer": "my_custom_analyzer",
+  "text": "Is this <b>déjà vu</b>?"
+}
+
+```
+
+## 分词的使用
+- 创建或更新文档时(Index Time)，会对相应的文档进行分词处理
+  >配置Index Mapping中每个字段的analyzer属性
+- 查询时(Search Time)，会对查询语句进行分词
+  >
