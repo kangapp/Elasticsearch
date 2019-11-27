@@ -244,3 +244,77 @@ PUT my-index
   }
 }
 ```
+- `path_match & path_unmatch`
+> 匹配字段点路径，eg：some_object.*.some_field
+```
+PUT my-index
+{
+  "mappings": {
+    "doc":{
+      "dynamic_templates":[
+          {
+        "full_name": {
+          "path_match":   "name.*",
+          "path_unmatch": "*.middle",
+          "mapping": {
+            "type":       "text",
+            "copy_to":    "full_name"
+          }
+        }
+      }
+        ]
+    }
+  }
+}
+```
+>除了middle字段不匹配，name.*字段都能匹配
+```
+PUT my-index/doc/1
+{
+  "name": {
+    "first":  "John",
+    "middle": "Winston",
+    "last":   "Lennon"
+  }
+}
+```
+- `{name} & {dynamic_type}`
+> mapping中的占位符，分别是字段名和es检测的动态类型 
+```
+PUT my_index
+{
+  "mappings": {
+    "dynamic_templates": [
+      {
+        "named_analyzers": {
+          "match_mapping_type": "string",
+          "match": "*",
+          "mapping": {
+            "type": "text",
+            "analyzer": "{name}"
+          }
+        }
+      },
+      {
+        "no_doc_values": {
+          "match_mapping_type":"*",
+          "mapping": {
+            "type": "{dynamic_type}",
+            "doc_values": false
+          }
+        }
+      }
+    ]
+  }
+}
+```
+> 所有string字段类型都使用字段名作为analyzer，非string字段则添加非doc_values属性
+```
+PUT my_index/_doc/1
+{
+  "english": "Some English text", 
+  "count":   5 
+}
+```
+
+- [动态模板示例](https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-templates.html#template-examples)
