@@ -142,3 +142,105 @@ PUT my-index
 ### [Dynamic Mapping](https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-mapping.html)
 > es可以自动识别文档字段类型，从而创建mapping
 
+![json映射es](images/jsonToEs.png)
+
+#### 日期自动检测
+> 日期自动检测是默认开启的，es有初始的`dynamic_date_formats`,也可自定义日期类型
+
+- `dynamic_data_formats`
+> 自定义日期类型，可被es检测为data类型
+```
+PUT my-index
+{
+  "mappings": {
+    "doc":{
+      "dynamic_date_formats": ["MM/yyyy/dd"]
+    }
+  }
+}
+```
+- `date_detection`
+> 是否开启日期自动检测
+``` 
+PUT my-index
+{
+  "mappings": {
+    "doc":{
+      "date_detection": false
+    }
+  }
+}
+```
+
+#### 数字自动检测
+> 默认是关闭的，当做string处理
+- `numeric_detection`
+> 是否开启数字自动检测
+```
+PUT my-index
+{
+  "mappings": {
+    "doc":{
+      "numeric_detection": true
+    }
+  }
+}
+```
+
+### [Dynamic Templates](https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-templates.html)
+>应用于动态添加的字段的自定义映射
+
+- `match_mapping_type`
+> 匹配es自动识别的[字段类型](https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-templates.html#match-mapping-type)
+```
+PUT my-index
+{
+  "mappings": {
+    "doc":{
+      "dynamic_templates":[
+          {
+            "string_as_keywords":{
+              "match_mapping_type": "string",
+              "mapping":{
+                "type": "keyword"
+              }
+            }
+          }
+        ]
+    }
+  }
+}
+```
+- `match & unmatch`
+> 匹配字段名
+- `match_pattern`
+> 支持正则，而不是简单的模式匹配
+```
+PUT my-index
+{
+  "mappings": {
+    "doc":{
+      "dynamic_templates":[
+          {
+            "message_as_text": {
+              "match_mapping_type": "string",
+              "match_pattern": "regex",
+              "match": "^message.*123$",
+              "mapping": {
+                "type": "text"
+              }
+            }
+          },
+          {
+            "string_as_keywords":{
+              "match_mapping_type": "string",
+              "mapping":{
+                "type": "keyword"
+              }
+            }
+          }
+        ]
+    }
+  }
+}
+```
