@@ -284,7 +284,7 @@ yellow open customer   99Yq4u7TSbW_izQIbyRSpg 5 1 1 0  4.4kb  4.4kb
 
 ### [Mapping](https://github.com/kangapp/Elasticsearch/tree/master/Mapping) 
 
-### [Search API](https://github.com/kangapp/Elasticsearch/tree/master/SearchARI)
+### [Search API](https://github.com/kangapp/Elasticsearch/tree/master/SearchAPI)
 
 ## 项目
 
