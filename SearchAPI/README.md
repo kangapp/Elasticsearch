@@ -103,9 +103,51 @@ GET my-index/_search
   }
 }
 ```
+- `match_phrase`
+> 检索时对词语顺序有要求
+```
+GET my-index/_search
+{
+  "query": {
+    "match_phrase": {
+      "job": {
+        "query": "math english"
+      }
+    }
+  }
+}
+```
+> slot参数表示词条相隔多远时仍能将文档视为匹配，即需要移动词条几次可匹配
+```
+GET my-index/_search
+{
+  "query": {
+    "match_phrase": {
+      "job": {
+        "query": "english chinese math",
+        "slop": 3
+      }
+    }
+  }
+}
+```
+> analyzer参数指定何种分析器来对该短语进行分词处理
+```
+GET /_search
+{
+    "query": {
+        "match_phrase" : {
+            "message" : {
+                "query" : "this is a test",
+                "analyzer" : "my_analyzer"
+            }
+        }
+    }
+}
+```
 
 #### 单词匹配
 >不会对查询语句作分词处理，直接去匹配字段的倒排索引，如term、terms、range等query类型
 
-### Compound query clauses(复合查询字句)>
+### Compound query clauses(复合查询字句)
 > 复合查询子句包装其他叶查询或复合查询，并用于以逻辑方式组合多个查询（例如bool或dis_max查询），或更改其行为（例如constant_score查询）
