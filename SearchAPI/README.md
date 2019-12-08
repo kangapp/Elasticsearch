@@ -149,5 +149,155 @@ GET /_search
 #### 单词匹配
 >不会对查询语句作分词处理，直接去匹配字段的倒排索引，如term、terms、range等query类型
 
+- `term`
+> 将整个查询语句作为单词进行查询，即不对查询语句进行分词处理
+```
+GET /_search
+{
+    "query": {
+        "term": {
+            "user": "Kimchy"
+        }
+    }
+}
+```
+> boost参数是浮点数，用于降低或增加查询的相关性分数。默认为1.0
+```
+GET /_search
+{
+    "query": {
+        "term": {
+            "user": {
+                "value": "Kimchy",
+                "boost": 1.0
+            }
+        }
+    }
+}
+```
+> 注意！！！！由于不对查询语句进行分词处理，会把整个语句去匹配倒排索引  
+下面查询不会检索出包含"Quick Brown Foxes!"的文档
+```
+GET my_index/_search?pretty
+{
+  "query": {
+    "term": {
+      "full_text": "Quick Brown Foxes!"
+    }
+  }
+}
+```
+- `terms`
+>和`term`查询相同，不同的是`terms`可以搜索多个值
+```
+GET /_search
+{
+    "query" : {
+        "terms" : {
+            "user" : ["kimchy", "elasticsearch"],
+            "boost" : 1.0
+        }
+    }
+}
+```
+- `range`
+> 范围查询主要针对数值型和日期型
+```
+GET my-index/_search
+{
+    "query": {
+        "range" : {
+            "age" : {
+                "gte" : 10,
+                "lte" : 20,
+                "boost" : 2.0
+            }
+        }
+    }
+}
+```
+> 当字段参数为日期字段数据类型时，可以使用
+[date math](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#date-math)
+
+```
+GET _search
+{
+    "query": {
+        "range" : {
+            "timestamp" : {
+                "gte" : "now-1d/d",
+                "lt" :  "now/d"
+            }
+        }
+    }
+}
+```
+
 ### Compound query clauses(复合查询字句)
 > 复合查询子句包装其他叶查询或复合查询，并用于以逻辑方式组合多个查询（例如bool或dis_max查询），或更改其行为（例如constant_score查询）
+
+- `Boolean Query`
+> 布尔查询由一个或多个布尔子句组成，每个布尔子句包含以下类型：  
+```
+POST _search
+{
+  "query": {
+    "bool" : {
+      "must" : {
+        "term" : { "user" : "kimchy" }
+      },
+      "filter": {
+        "term" : { "tag" : "tech" }
+      },
+      "must_not" : {
+        "range" : {
+          "age" : { "gte" : 10, "lte" : 20 }
+        }
+      },
+      "should" : [
+        { "term" : { "tag" : "wow" } },
+        { "term" : { "tag" : "elasticsearch" } }
+      ],
+      "minimum_should_match" : 1,
+      "boost" : 1.0
+    }
+  }
+}
+```
+> `filter`:只过滤符合条件的文档，不计算相关性得分  
+es针对filte有只能缓存，执行效率很高
+```
+GET _search
+{
+  "query": {
+    "bool": {
+      "filter": {
+        "term": {
+          "status": "active"
+        }
+      }
+    }
+  }
+}
+```
+> `must`:文档必须符合must中的所有条件，会影响相关性得分，等于每一项得分相加  
+
+> `must_not`:文档必须不符合所有条件，计分会被忽略，并会缓存字句
+
+> `should`:可以符合条件，会影响相关性得分
+
+- `constant_score`
+> 包装filte查询，并返回相关分数等于boost参数值的每个匹配文档
+```
+GET /_search
+{
+    "query": {
+        "constant_score" : {
+            "filter" : {
+                "term" : { "user" : "kimchy"}
+            },
+            "boost" : 1.2
+        }
+    }
+}
+```
