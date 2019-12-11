@@ -235,7 +235,7 @@ GET _search
 
 ### Compound query clauses(复合查询字句)
 > 复合查询子句包装其他叶查询或复合查询，并用于以逻辑方式组合多个查询（例如bool或dis_max查询），或更改其行为（例如constant_score查询）
-
+[☞相关链接](https://www.cnblogs.com/qdhxhz/p/11529107.html)
 - `Boolean Query`
 > 布尔查询由一个或多个布尔子句组成，每个布尔子句包含以下类型：  
 ```
