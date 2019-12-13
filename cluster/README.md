@@ -52,7 +52,10 @@ Master Node通过集群所有节点选举产生，可以被选举的节点称为
 - red 有主分片未分配
 
 ### 故障转移
-> 假设集群由三个节点组成，node1、node2和node3，其中node1是主节点，此时的集群状态是green。  
-当node1所在机器宕机导致服务终止，node2和node3发现node1无法响应一段时间后会发起master选举，这里选择node2为主节点，此时由于node1的主分片下线，集群状态为red  
-node2发现node1的主分片未分配，会将副本分片提升为主分片，此时所有的主分片正常分配，集群状态为yellow  
-node2为node1的分片生成新的副本，集群状态变为green
+> 1、假设集群由三个节点组成，node1、node2和node3，其中node1是主节点，此时的集群状态是green。  
+2、当node1所在机器宕机导致服务终止，node2和node3发现node1无法响应一段时间后会发起master选举，这里选择node2为主节点，此时由于node1的主分片下线，集群状态为red  
+3、node2发现node1的主分片未分配，会将副本分片提升为主分片，此时所有的主分片正常分配，集群状态为yellow  
+4、node2为node1的分片生成新的副本，集群状态变为green
+
+### es读写流程
+todo

@@ -286,6 +286,7 @@ yellow open customer   99Yq4u7TSbW_izQIbyRSpg 5 1 1 0  4.4kb  4.4kb
 
 ### [Search API](https://github.com/kangapp/Elasticsearch/tree/master/SearchAPI)
 
+### [Cluster](https://github.com/kangapp/Elasticsearch/tree/master/cluster)
 ## 项目
 
 - [ElasticSearch搜房网实战](https://github.com/kangapp/Elasticsearch/tree/master/project)
