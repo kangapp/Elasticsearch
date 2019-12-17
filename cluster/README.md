@@ -38,6 +38,11 @@ Master Node通过集群所有节点选举产生，可以被选举的节点称为
 #### Date Node
 > 数据节点保存数据并执行与数据相关的操作，例如CRUD，搜索和聚合，配置为`node.data:true`
 
+#### Coordinating Node
+> 协调节点，处理请求的节点，负责路由请求到正确的节点，如创建索引的请求需要路由到Master节点  
+所有节点默认是Coordinating Node  
+
+
 ### 副本与分片
 >索引已经创建，增加节点能否提高索引的数据容量？  
 不能，索引创建时分片的分布已经确定，新增的节点无法利用。
@@ -58,4 +63,34 @@ Master Node通过集群所有节点选举产生，可以被选举的节点称为
 4、node2为node1的分片生成新的副本，集群状态变为green
 
 ### es读写流程
-todo
+#### Lucene Index
+- 在 Lucene 中，单个倒排索引⽂件被称为Segment。Segment 是⾃包含的，不可变更的，多个 Segments 汇总在⼀起，称为 Lucene 的 Index，ES中的一个Shard(分片)对应一个Lucene Index，另外使用一个 commit 文件，记录索引内所有的 segment  
+- 当有新文档写⼊时，会生成新 Segment，查询时会同时查询所有 Segments，并且对结果汇总。Lucene 中有⼀个⽂件，用来记录所有 Segments 信息，叫做 Commit Point  
+- 删除的⽂档信息，保存在“.del”文件中
+![index](image/index.png)
+
+#### Refresh
+- Segment写入磁盘的过程很耗时，可以借助文件系统的缓存特性，先将Segment在缓存中创建并开放查询进一步提升实时性，该过程称为refresh
+- 在refresh之前，数据会首先写到index buffer中，此时数据不可被查询
+![refresh_1](image/refresh_1.png)
+- refresh时会将buffer中所有文档清空并生成Segmeng，此操作不会将数据写入磁盘
+![refresh_2](image/refresh_2.png)
+- Refresh 频率：默认 1 秒发生⼀次，可通过 `index.refresh_interval` 配置。Refresh 后，数据就可以被搜索到了。这也是为什么 Elasticsearch 被称为近实时搜索
+
+#### Transction log
+- 写入文档到buffer时，同时将该操作写入translog
+![translog](image/translog.png)
+- translog文件会即时写入到磁盘，6.x默认每个请求都会落盘，可以修改为每5秒写入一次，这样的风险是会丢失5秒的数据，相关配置为`index.translog.*`
+- es启动会检查translog文件，并从中恢复数据
+
+#### Flush
+- 将translog写入磁盘
+- 将index buffer清空，其中的文档生成新的segment，相当于refresh操作
+- 更新commit point并写入磁盘
+- 将内存中的segment写入磁盘
+- 删除旧的translog文件
+
+#### Segment Merging
+- 随着segment增多，由于一次查询的segment数增多，查询速度会变慢
+- es会定时在后台进行segment merge的操作，减少segment的数量
+- 通过force_merge api可以手动执行segment merge操作，`post my_index/forcemerge`
