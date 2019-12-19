@@ -301,3 +301,5 @@ GET /_search
     }
 }
 ```
+
+## Search的运行机制
