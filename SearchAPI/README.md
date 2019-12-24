@@ -303,3 +303,27 @@ GET /_search
 ```
 
 ## Search的运行机制
+> es在查询时可以指定搜索类型为`QUERY_THEN_FETCH`、`QUERY_AND_FEATCH`、`DFS_QUERY_THEN_FEATCH`、`DFS_QUERY_AND_FEATCH`
+### query then fetch(默认搜索类型)
+
+#### query阶段
+![query](image/query.png)
+#### fetch阶段
+![fetch](image/fetch.png)
+
+### 相关性算分
+
+#### 问题描述
+- 相关性算分在shard与shard之间是相互独立的，意味着同一个term的IDF值在不同的shard是不同的，文档的相关性算分和它所处的shard有关
+- 在文档数量不多时，会导致相关性算分严重不准的情况发生
+
+#### 解决思路
+- 设置分片数为1，从根本上解决问题，在文档数量不多时可以考虑该方案，适用百万到千万级别的文档数量
+- 使用`DFS Query-then-Fetch`查询方式
+> 在进行查询之前， 先对所有分片发送请求， 把所有分片中的词频和文档频率等打分依据全部汇总到一块， 再执行query_then_fetch操作
+![dfs_query_then_fetch](image/dfs_query_then_fetch.png)
+
+## 排序 
+> es默认采用相关性算分排序，可以通过设定sorting参数来自行设定排序规则
+
+![sort](image/sort.png)
