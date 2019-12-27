@@ -328,5 +328,5 @@ GET /_search
 排序是在每个字段级别上定义的，其中特殊字段名供_score按分数排序，而_doc按索引顺序排序。
 
 ![sort](image/sort.png)
-- 按照字符串排序比较特殊，es有text和keyword两种类型，针对text类型的排序
-![text](image/text_search.png)
+- 按照字符串排序比较特殊，es有text和keyword两种类型，针对text类型的排序会发生异常
+![text_search](image/text_search.png)
