@@ -329,4 +329,4 @@ GET /_search
 
 ![sort](image/sort.png)
 - 按照字符串排序比较特殊，es有text和keyword两种类型，针对text类型的排序
-![text](image/text.png)
+![text](image/text_search.png)
