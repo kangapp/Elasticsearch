@@ -324,6 +324,9 @@ GET /_search
 ![dfs_query_then_fetch](image/dfs_query_then_fetch.png)
 
 ## 排序 
-> es默认采用相关性算分排序，可以通过设定sorting参数来自行设定排序规则
+> es默认采用相关性算分排序，可以通过设定sorting参数来自行设定排序规则  
+排序是在每个字段级别上定义的，其中特殊字段名供_score按分数排序，而_doc按索引顺序排序。
 
 ![sort](image/sort.png)
+- 按照字符串排序比较特殊，es有text和keyword两种类型，针对text类型的排序
+![text](image/text.png)
