@@ -330,3 +330,45 @@ GET /_search
 ![sort](image/sort.png)
 - 按照字符串排序比较特殊，es有text和keyword两种类型，针对text类型的排序会发生异常
 ![text_search](image/text_search.png)
+
+### 排序过程
+> 排序过程实质是对字段原始内容进行排序的过程，这个过程`倒排索引`无法发挥作用，需要用到`正排索引`，也就是通过文档ID和字段快速得到字段的原始内容
+#### 实现方式
+![field_doc](image/field_doc.png)
+![get_sorting](image/get_sorting.png)
+- fielddata(默认禁用，即开即用，只针对text类型有效)
+![fielddata](image/fielddata.png)
+- doc values(默认启用，除了text类型)
+![doc_values](image/doc_values.png)
+
+## 分页和遍历
+![search_scene](image/search_scene.png)
+### From/Size
+>最常用的分页方案
+- from：指明开始位置
+- size：指明获取总数
+```
+GET test_index/_search
+{
+  "from":1,
+  "size":2
+}
+```
+![from_size](image/from_size.png)
+
+### Scroll
+>遍历文档集api，以快照的方式避免深度分页的问题
+- 不能用来做实时搜索，因为数据不是实时的
+- 尽量不用复杂的sort条件，使用_doc最高效
+
+![scroll_1](image/scroll_1.png)
+![scroll_2](image/scroll_2.png)
+![scroll_delete](image/scroll_delete.png)
+
+### Search_After
+>避免深度分页的性能问题，提供实时的下一页文档获取功能
+- 不能使用from参数，即不能指定页数
+- 只能下一页，不能上一页
+
+![search_after_1](image/search_after_1.png)
+![search](image/Search_after.png)
