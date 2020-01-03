@@ -13,7 +13,135 @@
 }
 ```
 ## Bucketing
-> 分桶类型，类似SQL中的`GROUP BY`语法
+> 分桶类型，类似SQL中的`GROUP BY`语法，按照一定的规则将文档分配不同的桶中，达到分类分析的目的。与指标聚合不同，分桶聚合可以保存子聚合
+
+- terms
+> 适用于`keyword`类型字段，如果是`text`类型字段，需要开启`fielddata`，根据分词结果来分桶
+```
+GET my-index/_search
+{
+  "size": 0, 
+  "aggs": {
+    "terms_job": {
+      "terms": {
+        "field": "job",
+        "size": 5
+      }
+    }
+  }
+}
+```
+---
+> 文档统计的数值并不是在任何情况下都是完全准确的  
+The default `shard_size` is (size * 1.5 + 10),从每个分片中获取前`shard_size`个结果，并将它们组合成最终的前`size`个列表，将产生以下结果  
+`doc_count_error_upper_bound`:  该值表示一个term的最大潜在的文档数量，但未计入最终结果列表  
+`sum_other_doc_count`: 没有用作最终统计的文档的数量
+```
+{
+  "took": 1,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 9,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "terms_job": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "math",
+          "doc_count": 8
+        },
+        {
+          "key": "chinese",
+          "doc_count": 7
+        },
+        {
+          "key": "english",
+          "doc_count": 3
+        }
+      ]
+    }
+  }
+}
+```
+- range
+> 通过指定数值范围来制定分桶规则
+```
+GET my-index/_search
+{
+  "size": 0,
+  "aggs": {
+    "range_age": {
+      "range": {
+        "field": "age",
+        "ranges": [
+          {
+            "key": "<24", 
+            "to": 24
+          },
+          {
+            "from": 25,
+            "to": 30
+          },
+          {
+            "from": 50
+          }
+        ]
+      }
+    }
+  }
+```
+---
+```
+{
+  "took": 0,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 9,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "range_age": {
+      "buckets": [
+        {
+          "key": "<24",
+          "to": 24,
+          "doc_count": 6
+        },
+        {
+          "key": "25.0-30.0",
+          "from": 25,
+          "to": 30,
+          "doc_count": 1
+        },
+        {
+          "key": "50.0-*",
+          "from": 50,
+          "doc_count": 0
+        }
+      ]
+    }
+  }
+}
+```
+
+- data_range
 
 ## Metric
 > 指标分析类型，如计算最大值、最小值、平均值等等
@@ -260,6 +388,137 @@ GET my-index/_search
         "24.0": 65.07936507936508,
         "35.0": 72.96296296296296
       }
+    }
+  }
+}
+```
+
+- top_hits
+>该聚合器旨在用作子聚合器，以便可以按存储分区汇总最匹配的文档
+```
+POST /sales/_search?size=0
+{
+    "aggs": {
+        "top_tags": {
+            "terms": {
+                "field": "type",
+                "size": 3
+            },
+            "aggs": {
+                "top_sales_hits": {
+                    "top_hits": {
+                        "sort": [
+                            {
+                                "date": {
+                                    "order": "desc"
+                                }
+                            }
+                        ],
+                        "_source": {
+                            "includes": [ "date", "price" ]
+                        },
+                        "size" : 1
+                    }
+                }
+            }
+        }
+    }
+}
+```
+---
+```
+{
+  ...
+  "aggregations": {
+    "top_tags": {
+       "doc_count_error_upper_bound": 0,
+       "sum_other_doc_count": 0,
+       "buckets": [
+          {
+             "key": "hat",
+             "doc_count": 3,
+             "top_sales_hits": {
+                "hits": {
+                   "total" : {
+                       "value": 3,
+                       "relation": "eq"
+                   },
+                   "max_score": null,
+                   "hits": [
+                      {
+                         "_index": "sales",
+                         "_type": "_doc",
+                         "_id": "AVnNBmauCQpcRyxw6ChK",
+                         "_source": {
+                            "date": "2015/03/01 00:00:00",
+                            "price": 200
+                         },
+                         "sort": [
+                            1425168000000
+                         ],
+                         "_score": null
+                      }
+                   ]
+                }
+             }
+          },
+          {
+             "key": "t-shirt",
+             "doc_count": 3,
+             "top_sales_hits": {
+                "hits": {
+                   "total" : {
+                       "value": 3,
+                       "relation": "eq"
+                   },
+                   "max_score": null,
+                   "hits": [
+                      {
+                         "_index": "sales",
+                         "_type": "_doc",
+                         "_id": "AVnNBmauCQpcRyxw6ChL",
+                         "_source": {
+                            "date": "2015/03/01 00:00:00",
+                            "price": 175
+                         },
+                         "sort": [
+                            1425168000000
+                         ],
+                         "_score": null
+                      }
+                   ]
+                }
+             }
+          },
+          {
+             "key": "bag",
+             "doc_count": 1,
+             "top_sales_hits": {
+                "hits": {
+                   "total" : {
+                       "value": 1,
+                       "relation": "eq"
+                   },
+                   "max_score": null,
+                   "hits": [
+                      {
+                         "_index": "sales",
+                         "_type": "_doc",
+                         "_id": "AVnNBmatCQpcRyxw6ChH",
+                         "_source": {
+                            "date": "2015/01/01 00:00:00",
+                            "price": 150
+                         },
+                         "sort": [
+                            1420070400000
+                         ],
+                         "_score": null
+                      }
+                   ]
+                }
+             }
+          }
+       ]
     }
   }
 }
