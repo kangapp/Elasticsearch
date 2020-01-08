@@ -257,7 +257,80 @@ GET my-index/_search
 }
 ```
 - date_histogram
+> 和普通的`histogram`相似，但是只适用于日期和日期范围  
+有两种方式指定间隔:[`Calendar intervals`](elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-datehistogram-aggregation.html#calendar_intervals)、[`Fixed intervals`](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-datehistogram-aggregation.html#fixed_intervals)
 
+
+> `calendar_interval`只能指定单位数量间隔
+```
+POST /sales/_search?size=0
+{
+    "aggs" : {
+        "sales_over_time" : {
+            "date_histogram" : {
+                "field" : "date",
+                "calendar_interval" : "month"
+            }
+        }
+    }
+}
+```
+
+```
+POST /sales/_search?size=0
+{
+    "aggs" : {
+        "sales_over_time" : {
+            "date_histogram" : {
+                "field" : "date",
+                "fixed_interval" : "30d"
+            }
+        }
+    }
+}
+```
+> `key_as_string`的显示和[`format`](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html)指定的日期格式有关
+```
+POST /sales/_search?size=0
+{
+    "aggs" : {
+        "sales_over_time" : {
+            "date_histogram" : {
+                "field" : "date",
+                "calendar_interval" : "1M",
+                "format" : "yyyy-MM-dd" 
+            }
+        }
+    }
+}
+```
+---
+```
+{
+    ...
+    "aggregations": {
+        "sales_over_time": {
+            "buckets": [
+                {
+                    "key_as_string": "2015-01-01",
+                    "key": 1420070400000,
+                    "doc_count": 3
+                },
+                {
+                    "key_as_string": "2015-02-01",
+                    "key": 1422748800000,
+                    "doc_count": 2
+                },
+                {
+                    "key_as_string": "2015-03-01",
+                    "key": 1425168000000,
+                    "doc_count": 2
+                }
+            ]
+        }
+    }
+}
+```
 ## Metric
 > 指标分析类型，如计算最大值、最小值、平均值等等
 
