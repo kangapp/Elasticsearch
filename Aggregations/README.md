@@ -142,6 +142,121 @@ GET my-index/_search
 ```
 
 - data_range
+>日期支持[Date Math](https://www.elastic.co/guide/en/elasticsearch/reference/current/common-options.html#date-math)
+```
+POST /sales/_search?size=0
+{
+    "aggs": {
+        "range": {
+            "date_range": {
+                "field": "date",
+                "format": "MM-yyyy",
+                "ranges": [
+                    { "to": "now-10M/M" }, 
+                    { "from": "now-10M/M" } 
+                ]
+            }
+        }
+    }
+}
+```
+---
+```
+{
+    ...
+    "aggregations": {
+        "range": {
+            "buckets": [
+                {
+                    "to": 1.4436576E12,
+                    "to_as_string": "10-2015",
+                    "doc_count": 7,
+                    "key": "*-10-2015"
+                },
+                {
+                    "from": 1.4436576E12,
+                    "from_as_string": "10-2015",
+                    "doc_count": 0,
+                    "key": "10-2015-*"
+                }
+            ]
+        }
+    }
+}
+```
+- histogram
+> 直方图，以固定间隔的策略来分割数据  
+`interval`:间隔值  
+`min_doc_count`:计数值超过该值才显示  
+`extended_bounds`:设定直方图范围
+```
+GET my-index/_search
+{
+  "size": 0,
+  "aggs": {
+    "histogram_age": {
+      "histogram": {
+        "field": "age",
+        "interval": 5,
+        "min_doc_count": 1,
+        "extended_bounds": {
+          "min": 0,
+          "max": 50
+        }
+      }
+    }
+  }
+}
+```
+---
+```
+{
+  "took": 8,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 9,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "histogram_age": {
+      "buckets": [
+        {
+          "key": 10,
+          "doc_count": 1
+        },
+        {
+          "key": 15,
+          "doc_count": 1
+        },
+        {
+          "key": 20,
+          "doc_count": 4
+        },
+        {
+          "key": 25,
+          "doc_count": 1
+        },
+        {
+          "key": 30,
+          "doc_count": 1
+        },
+        {
+          "key": 45,
+          "doc_count": 1
+        }
+      ]
+    }
+  }
+}
+```
+- date_histogram
 
 ## Metric
 > 指标分析类型，如计算最大值、最小值、平均值等等
