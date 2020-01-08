@@ -13,7 +13,7 @@
 }
 ```
 ## Bucketing
-> 分桶类型，类似SQL中的`GROUP BY`语法，按照一定的规则将文档分配不同的桶中，达到分类分析的目的。与指标聚合不同，分桶聚合可以保存子聚合
+> 分桶类型，类似SQL中的`GROUP BY`语法，按照一定的规则将文档分配不同的桶中，达到分类分析的目的。与指标聚合不同，分桶聚合可以保存子聚合，即允许通过添加子分析进行进一步分析，子分析可以使`Bucket`，也可以是`Metric`
 
 - terms
 > 适用于`keyword`类型字段，如果是`text`类型字段，需要开启`fielddata`，根据分词结果来分桶
@@ -713,7 +713,111 @@ POST /sales/_search?size=0
 ```
 
 ## Pipeline
-> 管道分析类型，基于上一级局和分析的结果进行再分析
+> 管道分析类型，基于上一级局和分析的结果进行再分析  
+分析结果会输出到原结果中，根据输出结果的位置不同，可以分为以下两类:
+
+### Parent(父辈)
+>结果内嵌到现有的聚合分析结果中
+
+### Sibling(同辈)
+>结果与现有聚合分析结果同级  
+
+`min_bucket`|`max_bucket`|`avg_bucket`|`sum_bucket`  
+`stats_bucket`|`extended_stats_bucket`  
+`percentiles_bucket`
+```
+GET my-index/_search
+{
+  "size": 0, 
+  "aggs": {
+    "terms_job": {
+      "terms": {
+        "field": "job.keyword",
+        "size": 5
+      },
+      "aggs": {
+        "avg_age": {
+          "avg": {
+            "field": "age"
+          }
+        }
+      }
+    },
+    "min_age_by_job":{
+      "min_bucket": {
+        "buckets_path": "terms_job>avg_age"
+      }
+    }
+  }
+}
+```
+---
+```
+{
+  "took": 6,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 12,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "terms_job": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 2,
+      "buckets": [
+        {
+          "key": "math chinese",
+          "doc_count": 5,
+          "avg_age": {
+            "value": 28.4
+          }
+        },
+        {
+          "key": "math",
+          "doc_count": 2,
+          "avg_age": {
+            "value": 27.5
+          }
+        },
+        {
+          "key": "chinese",
+          "doc_count": 1,
+          "avg_age": {
+            "value": 28
+          }
+        },
+        {
+          "key": "english",
+          "doc_count": 1,
+          "avg_age": {
+            "value": 45
+          }
+        },
+        {
+          "key": "english chinese",
+          "doc_count": 1,
+          "avg_age": {
+            "value": 21
+          }
+        }
+      ]
+    },
+    "min_age_by_job": {
+      "value": 21,
+      "keys": [
+        "english chinese"
+      ]
+    }
+  }
+}
+```
 
 ## Matrix
 > 
