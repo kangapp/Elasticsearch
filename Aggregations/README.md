@@ -12,7 +12,106 @@
     [,"<aggregation_name_2>" : { ... } ]*
 }
 ```
-## Bucketing
+
+## 作用范围
+> 默认作用范围query的结果集，可以通过以下方法改变其作用范围
+- filter/filters(属于bucket的一种，将当前聚合范围缩小)
+```
+POST /sales/_search?size=0
+{
+    "aggs" : {
+        "t_shirts" : {
+            "filter" : { "term": { "type": "t-shirt" } },
+            "aggs" : {
+                "avg_price" : { "avg" : { "field" : "price" } }
+            }
+        }
+    }
+}
+```
+---
+```
+{
+    ...
+    "aggregations" : {
+        "t_shirts" : {
+            "doc_count" : 3,
+            "avg_price" : { "value" : 128.33333333333334 }
+        }
+    }
+}
+```
+- post_filter
+>作用于文档过滤，但在聚合分析后生效
+```
+GET /shirts/_search
+{
+  "query": {
+    "bool": {
+      "filter": {
+        "term": { "brand": "gucci" } 
+      }
+    }
+  },
+  "aggs": {
+    "colors": {
+      "terms": { "field": "color" } 
+    },
+    "color_red": {
+      "filter": {
+        "term": { "color": "red" } 
+      },
+      "aggs": {
+        "models": {
+          "terms": { "field": "model" } 
+        }
+      }
+    }
+  },
+  "post_filter": { 
+    "term": { "color": "red" }
+  }
+}
+```
+- global
+> 无视query过滤条件，基于全部文档进行分析
+```
+POST /sales/_search?size=0
+{
+    "query" : {
+        "match" : { "type" : "t-shirt" }
+    },
+    "aggs" : {
+        "all_products" : {
+            "global" : {}, 
+            "aggs" : { 
+                "avg_price" : { "avg" : { "field" : "price" } }
+            }
+        },
+        "t_shirts": { "avg" : { "field" : "price" } }
+    }
+}
+```
+---
+```
+{
+    ...
+    "aggregations" : {
+        "all_products" : {
+            "doc_count" : 7, 
+            "avg_price" : {
+                "value" : 140.71428571428572 
+            }
+        },
+        "t_shirts": {
+            "value" : 128.33333333333334 
+        }
+    }
+}
+```
+
+## 类型
+### Bucketing
 > 分桶类型，类似SQL中的`GROUP BY`语法，按照一定的规则将文档分配不同的桶中，达到分类分析的目的。与指标聚合不同，分桶聚合可以保存子聚合，即允许通过添加子分析进行进一步分析，子分析可以使`Bucket`，也可以是`Metric`
 
 - terms
@@ -331,10 +430,10 @@ POST /sales/_search?size=0
     }
 }
 ```
-## Metric
+### Metric
 > 指标分析类型，如计算最大值、最小值、平均值等等
 
-### 单值分析
+#### 单值分析
 > 输出一个分析结果
 - min | max | avg | sum
 ```
@@ -436,7 +535,7 @@ GET my-index/_search
 }
 ```
 
-### 多值分析
+#### 多值分析
 > 输出多个分析结果
 - stats
 > 返回一系列数值类型的统计值，包含`min`、`max`、`avg`、`sum`、`count`，还可扩展方差和标准差等
@@ -712,12 +811,12 @@ POST /sales/_search?size=0
 }
 ```
 
-## Pipeline
+### Pipeline
 > 管道分析类型，基于上一级局和分析的结果进行再分析  
 `buckets_path`取的是相对路径  
 分析结果会输出到原结果中，根据输出结果的位置不同，可以分为以下两类:
 
-### Parent(父辈，基于histogram)
+#### Parent(父辈，基于histogram)
 >结果内嵌到现有的聚合分析结果中
 - derivative(求导)
 ```
@@ -804,7 +903,7 @@ POST employees/_search
 ```
 - moving_avg(移动平均数)
 
-### Sibling(同辈)
+#### Sibling(同辈)
 >结果与现有聚合分析结果同级，常用的有以下聚合函数，和`Metric`类似  
 
 `min_bucket`|`max_bucket`|`avg_bucket`|`sum_bucket`  
@@ -904,5 +1003,5 @@ GET my-index/_search
 }
 ```
 
-## Matrix
+### Matrix
 > 
