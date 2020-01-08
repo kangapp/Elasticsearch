@@ -714,13 +714,98 @@ POST /sales/_search?size=0
 
 ## Pipeline
 > 管道分析类型，基于上一级局和分析的结果进行再分析  
+`buckets_path`取的是相对路径  
 分析结果会输出到原结果中，根据输出结果的位置不同，可以分为以下两类:
 
-### Parent(父辈)
+### Parent(父辈，基于histogram)
 >结果内嵌到现有的聚合分析结果中
+- derivative(求导)
+```
+#按照年龄对平均工资求导 
+POST employees/_search
+{
+  "size": 0,
+  "aggs": {
+    "age": {
+      "histogram": {
+        "field": "age",
+        "min_doc_count": 1,
+        "interval": 1
+      },
+      "aggs": {
+        "avg_salary": {
+          "avg": {
+            "field": "salary"
+          }
+        },
+        "derivative_avg_salary":{
+          "derivative": {
+            "buckets_path": "avg_salary"
+          }
+        }
+      }
+    }
+  }
+}
+```
+---
+```
+"aggregations" : {
+  "age" : {
+    "buckets" : [
+      {
+        "key" : 20.0,
+        "doc_count" : 1,
+        "avg_salary" : {
+          "value" : 9000.0
+        }
+      },
+      {
+        "key" : 21.0,
+        "doc_count" : 1,
+        "avg_salary" : {
+          "value" : 16000.0
+        },
+        "derivative_avg_salary" : {
+          "value" : 7000.0
+        }
+      }
+    ]
+  }
+}
+```
+- cumulative_sum(累积求和)
+```
+POST employees/_search
+{
+  "size": 0,
+  "aggs": {
+    "age": {
+      "histogram": {
+        "field": "age",
+        "min_doc_count": 1,
+        "interval": 1
+      },
+      "aggs": {
+        "avg_salary": {
+          "avg": {
+            "field": "salary"
+          }
+        },
+        "cumulative_salary":{
+          "cumulative_sum": {
+            "buckets_path": "avg_salary"
+          }
+        }
+      }
+    }
+  }
+}
+```
+- moving_avg(移动平均数)
 
 ### Sibling(同辈)
->结果与现有聚合分析结果同级  
+>结果与现有聚合分析结果同级，常用的有以下聚合函数，和`Metric`类似  
 
 `min_bucket`|`max_bucket`|`avg_bucket`|`sum_bucket`  
 `stats_bucket`|`extended_stats_bucket`  
