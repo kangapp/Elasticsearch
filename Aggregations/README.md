@@ -1005,3 +1005,296 @@ GET my-index/_search
 
 ### Matrix
 > 
+
+## 排序
+
+> 可以使用聚合函数自带的关键数据进行排序
+- _count 文档数(默认)
+```
+GET /_search
+{
+    "aggs" : {
+        "genres" : {
+            "terms" : {
+                "field" : "genre",
+                "order" : { "_count" : "asc" }
+            }
+        }
+    }
+}
+```
+- _key 按照key值排序
+```
+GET /_search
+{
+    "aggs" : {
+        "genres" : {
+            "terms" : {
+                "field" : "genre",
+                "order" : { "_key" : "asc" }
+            }
+        }
+    }
+}
+```
+> 根据子聚合分析结果进行排序
+- 返回单值的子聚合
+```
+GET my-index/_search
+{
+  "size": 0,
+  "aggs": {
+    "term_job": {
+      "terms": {
+        "field": "job.keyword",
+        "size": 10,
+        "order": {
+          "max_age": "desc"
+        }
+      },
+      "aggs": {
+        "max_age": {
+          "max": {
+            "field": "age"
+          }
+        }
+      }
+    }
+  }
+}
+```
+---
+```
+{
+  "took": 7,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 12,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "term_job": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "math chinese",
+          "doc_count": 5,
+          "max_age": {
+            "value": 49
+          }
+        },
+        {
+          "key": "english",
+          "doc_count": 1,
+          "max_age": {
+            "value": 45
+          }
+        },
+        {
+          "key": "math",
+          "doc_count": 2,
+          "max_age": {
+            "value": 34
+          }
+        },
+        {
+          "key": "chinese",
+          "doc_count": 1,
+          "max_age": {
+            "value": 28
+          }
+        },
+        {
+          "key": "english chinese",
+          "doc_count": 1,
+          "max_age": {
+            "value": 21
+          }
+        },
+        {
+          "key": "english chinese math",
+          "doc_count": 1,
+          "max_age": {
+            "value": 21
+          }
+        },
+        {
+          "key": "english math",
+          "doc_count": 1,
+          "max_age": {
+            "value": 21
+          }
+        }
+      ]
+    }
+  }
+}
+```
+- 返回多值的子聚合
+```
+GET my-index/_search
+{
+  "size": 0,
+  "aggs": {
+    "term_job": {
+      "terms": {
+        "field": "job.keyword",
+        "size": 10,
+        "order": {
+          "filter_by_age>stats_age.min": "desc"
+        }
+      },
+      "aggs": {
+        "filter_by_age": {
+          "filter": {
+            "range": {
+              "age": {
+                "gte": 20
+              }
+            }
+          },
+          "aggs": {
+            "stats_age": {
+              "stats": {
+                "field": "age"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+---
+```
+{
+  "took": 1,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 12,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "term_job": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "english",
+          "doc_count": 1,
+          "filter_by_age": {
+            "doc_count": 1,
+            "stats_age": {
+              "count": 1,
+              "min": 45,
+              "max": 45,
+              "avg": 45,
+              "sum": 45
+            }
+          }
+        },
+        {
+          "key": "chinese",
+          "doc_count": 1,
+          "filter_by_age": {
+            "doc_count": 1,
+            "stats_age": {
+              "count": 1,
+              "min": 28,
+              "max": 28,
+              "avg": 28,
+              "sum": 28
+            }
+          }
+        },
+        {
+          "key": "math chinese",
+          "doc_count": 5,
+          "filter_by_age": {
+            "doc_count": 3,
+            "stats_age": {
+              "count": 3,
+              "min": 28,
+              "max": 49,
+              "avg": 37,
+              "sum": 111
+            }
+          }
+        },
+        {
+          "key": "english chinese",
+          "doc_count": 1,
+          "filter_by_age": {
+            "doc_count": 1,
+            "stats_age": {
+              "count": 1,
+              "min": 21,
+              "max": 21,
+              "avg": 21,
+              "sum": 21
+            }
+          }
+        },
+        {
+          "key": "english chinese math",
+          "doc_count": 1,
+          "filter_by_age": {
+            "doc_count": 1,
+            "stats_age": {
+              "count": 1,
+              "min": 21,
+              "max": 21,
+              "avg": 21,
+              "sum": 21
+            }
+          }
+        },
+        {
+          "key": "english math",
+          "doc_count": 1,
+          "filter_by_age": {
+            "doc_count": 1,
+            "stats_age": {
+              "count": 1,
+              "min": 21,
+              "max": 21,
+              "avg": 21,
+              "sum": 21
+            }
+          }
+        },
+        {
+          "key": "math",
+          "doc_count": 2,
+          "filter_by_age": {
+            "doc_count": 2,
+            "stats_age": {
+              "count": 2,
+              "min": 21,
+              "max": 34,
+              "avg": 27.5,
+              "sum": 55
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
