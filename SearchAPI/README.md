@@ -372,3 +372,130 @@ GET test_index/_search
 
 ![search_after_1](image/search_after_1.png)
 ![search](image/Search_after.png)
+
+## Script Field
+>脚本自定义返回值  
+lang: 指定脚本语言， 默认是 painless  
+source: 指定脚本代码  
+params: 指定参数作为脚本执行的变量
+```
+GET my-index/_search
+{
+  "profile": false,
+  "query": {
+    "match": {
+      "username": "jack tom"
+    }
+  },
+  "script_fields": {
+    "age1": {
+      "script" : {
+        "lang": "painless",
+        "source": "doc['age'].value * params.factor",
+        "params" : {
+          "factor"  : 2.0
+        }
+      }
+    }
+  }
+}
+```
+---
+```
+{
+  "took": 11,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 2,
+    "max_score": 0.9808292,
+    "hits": [
+      {
+        "_index": "my-index",
+        "_type": "doc",
+        "_id": "2",
+        "_score": 0.9808292,
+        "fields": {
+          "age1": [
+            42
+          ]
+        }
+      },
+      {
+        "_index": "my-index",
+        "_type": "doc",
+        "_id": "3",
+        "_score": 0.6931472,
+        "fields": {
+          "age1": [
+            42
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+> 问实际的_source文档并提取要从中返回的特定元素
+```
+GET my-index/_search
+{
+  "profile": false,
+  "query": {
+    "match": {
+      "username": "jack tom"
+    }
+  },
+  "script_fields": {
+    "age1": {
+      "script" : "params['_source']['age']"
+    }
+  }
+}
+```
+---
+```
+{
+  "took": 7,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 2,
+    "max_score": 0.9808292,
+    "hits": [
+      {
+        "_index": "my-index",
+        "_type": "doc",
+        "_id": "2",
+        "_score": 0.9808292,
+        "fields": {
+          "age1": [
+            21
+          ]
+        }
+      },
+      {
+        "_index": "my-index",
+        "_type": "doc",
+        "_id": "3",
+        "_score": 0.6931472,
+        "fields": {
+          "age1": [
+            21
+          ]
+        }
+      }
+    ]
+  }
+}
+```
