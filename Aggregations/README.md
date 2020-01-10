@@ -3,19 +3,17 @@
 目录
 =================
 
-   * [<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html" rel="nofollow">Aggregations</a>](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html)
-      * [基本结构]()
-      * [作用范围]()
-      * [类型]()
-         * [Bucketing]()
-         * [Metric]()
-            * [单值分析]()
-            * [多值分析]()
-         * [Pipeline]()
-            * [Parent(父辈，基于histogram)]()
-            * [Sibling(同辈)]()
-         * [Matrix]()
-      * [排序]()
+* [作用范围](#作用范围)
+* [类型](#类型)
+    * [Bucketing](#bucketing)
+    * [Metric](#metric)
+      * [单值分析](#单值分析)
+      * [多值分析](#多值分析)
+    * [Pipeline](#pipeline)
+      * [Parent(父辈，基于histogram)](#parent父辈基于histogram)
+      * [Sibling(同辈)](#sibling同辈)
+    * [Matrix](#matrix)
+* [排序](#排序)
 
 ## 基本结构
 > 聚合分析作为seach的一部分，其基本的api结构如下：
