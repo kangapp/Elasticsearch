@@ -290,6 +290,8 @@ yellow open customer   99Yq4u7TSbW_izQIbyRSpg 5 1 1 0  4.4kb  4.4kb
 
 ### [Aggregations](https://github.com/kangapp/Elasticsearch/tree/master/Aggregations)
 
+### [Data Modeling](https://github.com/kangapp/Elasticsearch/tree/master/DataModeling)
+
 ## 项目
 
 - [ElasticSearch搜房网实战](https://github.com/kangapp/Elasticsearch/tree/master/project)
