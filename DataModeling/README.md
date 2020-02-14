@@ -365,3 +365,38 @@ GET /my-index/_search
 - index设置变更，比如分片数更改等
 - 数据迁移
 ### API
+
+#### [`_update_by_query`](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/docs-update-by-query.html)在现有索引上重建
+> 将所有文档重建
+```
+POST my-index/_update_by_query?conflicts=proceed
+```
+>重建部分文档
+```
+POST twitter/_update_by_query
+{
+  "script": {
+    "source": "ctx._source.likes++",
+    "lang": "painless"
+  },
+  "query": {
+    "term": {
+      "user": "kimchy"
+    }
+  }
+}
+```
+
+#### [`_reindex`](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/docs-reindex.html)
+> 在其他索引上重建
+```
+POST _reindex
+{
+  "source": {
+    "index": "twitter"
+  },
+  "dest": {
+    "index": "new_twitter"
+  }
+}
+```
