@@ -318,3 +318,128 @@ duration: 0.043
 ### file
 
 ### elasticsearch
+
+## 项目实战
+`apache-log.conf`
+```
+input{
+    #三种数据输入方式
+
+    #http{
+    #    port => 7474
+    #}
+
+    stdin{}
+   # file{
+   #     path => "/Users/rockybean/Downloads/es/6.1/logstash-6.1.1/demo_data/apache_logs/apache_logs"
+   #     start_position => "beginning"
+   # }
+}
+
+filter{
+    #如果是测试，则添加@metadata子字段供后续判断
+    mutate{add_field => {"[@metadata][debug]"=>true}}
+
+    #grok filter解析apache log
+    grok{
+        match => {
+            "message" => '%{IPORHOST:clientip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:[@metadata][timestamp]}\] "(?:%{WORD:verb} %{NOTSPACE:request}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-) %{QS:referrer} %{QS:agent}'
+        }
+    }
+
+    #用ruby代码给字段赋值
+    ruby{
+        code => "event.set('@read_timestamp',event.get('@timestamp'))"
+    }
+
+    # 20/May/2015:21:05:56 +0000
+    date{
+        match => ["[@metadata][timestamp]","dd/MMM/yyyy:HH:mm:ss Z"]
+    }
+
+    mutate{
+        convert => {"bytes" => "integer"}
+    }
+
+    geoip{
+        source => "clientip"
+        fields => ["location","country_name","city_name","region_name"]
+    }
+
+    useragent{
+        source => "agent"
+        target => "useragent"
+    }
+
+    mutate{remove_field=>["headers"]}
+
+    mutate{
+        add_field=>{
+            "[@metadata][index]" => "apache_logs_%{+YYYY.MM}"
+        }
+    }
+
+    if "_grokparsefailure" in [tags] {
+        mutate{
+            replace=>{
+                "[@metadata][index]" => "apache_logs_failure_%{+YYYY.MM}"
+            }
+        }
+    }else{
+        mutate{remove_field=>["message"]}
+
+    }
+
+}
+
+output{
+    if [@metadata][debug]{
+        stdout{codec=>rubydebug{metadata=>true}}
+    }else{
+        stdout{codec=>dots}
+
+        elasticsearch{
+            index => "%{[@metadata][index]}"
+            document_type => "doc"
+        }
+    }
+}
+```
+`46.105.14.53 - - [20/May/2015:21:05:15 +0000] "GET /blog/tags/puppet?flav=rss20 HTTP/1.1" 200 14872 "-" "UniversalFeedParser/4.2-pre-314-svn +http://feedparser.org/"`
+```
+{
+            "request" => "/blog/tags/puppet?flav=rss20",
+              "agent" => "\"UniversalFeedParser/4.2-pre-314-svn +http://feedparser.org/\"",
+              "geoip" => {
+        "country_name" => "France",
+            "location" => {
+            "lon" => 2.3387000000000002,
+            "lat" => 48.8582
+        }
+    },
+               "auth" => "-",
+              "ident" => "-",
+          "@metadata" => {
+            "index" => "apache_logs_2015.05",
+            "debug" => "true",
+        "timestamp" => "20/May/2015:21:05:15 +0000"
+    },
+               "verb" => "GET",
+          "useragent" => {
+             "os" => "Other",
+          "build" => "",
+           "name" => "Other",
+        "os_name" => "Other",
+         "device" => "Other"
+    },
+           "referrer" => "\"-\"",
+    "@read_timestamp" => 2020-02-21T14:30:43.695Z,
+         "@timestamp" => 2015-05-20T21:05:15.000Z,
+              "bytes" => 14872,
+           "response" => "200",
+           "clientip" => "46.105.14.53",
+           "@version" => "1",
+               "host" => "127.0.0.1",
+        "httpversion" => "1.1"
+}
+```
