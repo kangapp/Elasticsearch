@@ -445,3 +445,77 @@ output{
         "httpversion" => "1.1"
 }
 ```
+
+### csv文件导入
+`csv.conf`
+```
+input{
+    file{
+        path => "/Users/liufukang/app/logstash-7.5.2/test-data/earthquakes.csv"
+        start_position => "beginning"
+        #sincedb_path => "/dev/null"
+    }
+}
+
+filter{
+    csv{
+        columns => ["timestamp","latitude","longitude","depth","mag","magType","nst","gap","dmin","rms","source","event_id"]
+        convert => {"latitude" => "float"}
+        convert => {"longitude" => "float"}
+        convert => {"depth" => "float"}
+        convert => {"mag" => "float"}
+        convert => {"gap" => "float"}
+        convert => {"dmin" => "float"}
+        convert => {"rms" => "float"}
+    }
+
+    mutate{
+        add_field => {"location"=>"%{latitude},%{longitude}"}
+        remove_field => [ "latitude","longitude"]
+    }
+
+    #2016/01/01 00:30:04.91
+    date{
+        match => ["timestamp","yyyy/MM/dd HH:mm:ss.SS"]
+        remove_field => ["timestamp"]
+    }
+
+}
+
+output{
+    elasticsearch{
+        index => "earthquake"
+    }
+
+    stdout{}
+}
+```
+```
+{
+           "rms" => 0.99,
+        "source" => "NC",
+      "event_id" => "72724990",
+          "path" => "/Users/liufukang/app/logstash-7.5.2/test-data/earthquakes.csv",
+       "message" => "2016/11/14 12:02:14.65,36.7622,-120.8830,22.32,2.22,Md,9,169,34,0.99,NC,72724990",
+         "depth" => 22.32,
+       "magType" => "Md",
+           "nst" => "9",
+          "host" => "liufukangdeMacBook-Pro.local",
+           "gap" => 169.0,
+      "@version" => "1",
+      "location" => "36.7622,-120.883",
+           "mag" => 2.22,
+    "@timestamp" => 2016-11-14T04:02:14.650Z,
+          "dmin" => 34.0
+}
+```
+
+## Logstash 监控
+### api
+- `http://localhost:9600/`
+> {  "host":"liufukangdeMacBook-Pro.local","version":"7.5.2","http_address":"127.0.0.1:9600","id":"2b408cde-a26c-4aea-84c3-ced216c13e71","name":"liufukangdeMacBook-Pro.local","ephemeral_id":"9662dd9a-af5b-444c-a985-8339ce86840b","status":"green","snapshot":false,"pipeline":{"workers":12,"batch_size":125,"batch_delay":50},"build_date":"2020-01-15T13:36:48+00:00","build_sha":"726b142a67fcfd292b7297903a1163e41bbc5e68","build_snapshot":false}
+- `http://localhost:9600/_node`
+- `http://localhost:9600/_node/stats`
+- `http://localhost:9600/_node/hot_threads`
+
+### x-pack监控
