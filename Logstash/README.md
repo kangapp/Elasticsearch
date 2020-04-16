@@ -105,7 +105,7 @@ output {
 - exclude
 > Value Type:array  
 排除不想监听的文件规则
-- sincedb_pathedit
+- sincedb_path
 > Vaule Type:string  
 sincedb数据库文件的路径（保持跟踪受监视日志文件的当前位置）
 - start_position
@@ -116,7 +116,8 @@ sincedb数据库文件的路径（保持跟踪受监视日志文件的当前位�
 - discover_interval
 > 定时检查是否有新文件待读取，单位秒，默认为15秒
 
-`input-file.conf`(这样在测试的时候会后弊端，beginning只在第一次有效)
+`input-file.conf`(这样在测试的时候会后弊端，beginning只在第一次有效) 
+可以设置sincedb_path指向 /dev/null
 ```
 input {
     file {
